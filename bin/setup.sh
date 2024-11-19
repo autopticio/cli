@@ -71,14 +71,23 @@ echo "Storybooks data created: $STORYBOOK_OUTPUT"
 confirm_save() {
     local prompt_message="$1"
     local command="$2"
-    
-    read -p "$prompt_message (y/n): " confirm
-    if [[ $confirm == [yY] ]]; then
-        eval "$command"
-        echo "Save command executed."
-    else
-        echo "Skipped saving."
-    fi
+
+    while true; do
+        read -p "$prompt_message (y/n): " confirm
+        case "$confirm" in
+            [yY])
+                eval "$command" && echo "Save command executed." || echo "Failed to execute save command."
+                break
+                ;;
+            [nN])
+                echo "Skipped saving."
+                break
+                ;;
+            *)
+                echo "Invalid input. Please enter 'y' or 'n'."
+                ;;
+        esac
+    done
 }
 
 echo "Proceeding to save resources to the server..."
