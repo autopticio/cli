@@ -1,0 +1,40 @@
+//Query multiple aws accounts and regions
+where(@cw_aws)
+.what("MetricName='CPUUtilization';InstanceId='*';Region='eu-*|us-*';Namespace='AWS/EC2'")
+.when(6h)
+.window(15m)
+    .request($where[0];$what[0];$when[0];$window[0]).as($cpus)
+
+//Aggregate CPU data across accounts and regions the into a single time series
+.merge($cpus; average).as($cpus_ts)
+
+//Get the averages for each instance and sort the set
+.average($cpus).as($cpu_instance_avg)
+.sort($cpu_instance_avg; 0).as($sorted_desc)
+
+ .note("Aggregate CPU utilization")
+    .chart($cpus_ts;@line)
+
+.note("EC2 instance utilization")
+    .head($sorted_desc;3).as($top_instances; description='Most utilized instances')
+    .tail($sorted_desc;3).as($bottom_instances ; description='Least utilized instances')
+    .chart($top_instances;@piestack)
+    .chart($bottom_instances;@piestack)
+
+.note("CPU Utilization per instance")
+   .chart($cpus;@line)
+
+
+//Slice the time series and get the lowest/highest value samples
+.note("Periods with highest and lowest CPU utilization across accounts and regions")    
+    .sort($cpus_ts; 0).as($sorted)
+    .head($sorted; 3%).as($high_times)
+    .tail($sorted; 3%).as($low_times)
+    .chart($high_times;$low_times;@bar)
+
+.note("CPU volatility index for this period")
+    //Compute the volatility is computed based on percentile distance to median
+    .percentile($cpus_ts;0.99).as($cpus_perc)
+    .percentile($cpus_ts;0.50).as($cpus_med)
+    .math((1-$cpus_med/$cpus_perc)*100).as($volatility_index)
+    .chart($volatility_index;@bar)

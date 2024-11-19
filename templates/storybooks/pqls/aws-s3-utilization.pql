@@ -1,0 +1,24 @@
+where(@cw_aws)
+.what(
+    "MetricName='BucketSizeBytes';BucketName='*';Namespace='AWS/S3';Region='us-*|eu-*'";
+    "MetricName='NumberOfObjects';BucketName='*';Namespace='AWS/S3';Region='us-*|eu-*'"
+    )
+.when(3d)
+.window(1d)
+.request($where[0] ; $what[0] ; $when[0] ; $window[0]).as($size)
+.request($where[0] ; $what[1] ; $when[0] ; $window[0]).as($count)
+
+//Use the latest values as we are ranking by the current state of metrics
+.tail($size;1).as($last_size_sample).average($last_size_sample).as($latest_size)
+.tail($count;1).as($last_count_sample).average($last_count_sample).as($latest_count)
+
+//get the top buckets by size and count
+.head($latest_size;5).as($top5_by_size)
+.head($latest_count;5).as($top5_by_count)
+
+//print a note in markdown and chart the aggregates and the time series
+.note("## S3 - buckets and objects")
+.chart($top5_by_size;@piestack)
+.chart($top5_by_count;@piestack)
+.chart($count;@line)
+.chart($size;@line)

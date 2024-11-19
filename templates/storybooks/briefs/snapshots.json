@@ -1,0 +1,72 @@
+{
+  "config": {
+    "slack": {
+      "endpoint": "",
+      "token": ""
+    },
+    "llm": {
+      "temperature": 0,
+      "max_tokens": 0,
+      "endpoint": "",
+      "model": "",
+      "token": ""
+    }
+  },
+  "task": [
+    {
+      "name": "aws-s3",
+      "type": "schedule",
+      "vars": {
+        "pql": "aws-s3-utilization",
+        "env": "production",
+        "cron": "0 * * * *",
+      	"channel": "",
+      	"prompt": ""
+      }
+    },
+    {
+      "name": "aws-ec2",
+      "type": "schedule",
+      "vars": {
+        "pql": "aws-ec2-utilization",
+        "env": "production",
+        "cron": "0 * * * *",
+      	"channel": "",
+      	"prompt": ""
+      }
+    },
+    {
+      "name": "aws-lambda",
+      "type": "schedule",
+      "vars": {
+        "pql": "aws-lambda-performance",
+        "env": "production",
+        "cron": "0 * * * *",
+      	"channel": "",
+      	"prompt": ""
+      }
+    },
+    {
+      "name": "aws-rds",
+      "type": "schedule",
+      "vars": {
+        "pql": "aws-rds-utilization",
+        "env": "production",
+        "cron": "0 * * * *",
+      	"channel": "",
+      	"prompt": ""
+      }
+    },
+    {
+      "name": "aws-apigateway",
+      "type": "schedule",
+      "vars": {
+        "pql": "aws-apigateway-slo",
+        "env": "production",
+        "cron": "0 * * * *",
+      	"channel": "",
+      	"prompt": ""
+      }
+    }
+  ]
+}

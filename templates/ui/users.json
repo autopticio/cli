@@ -1,0 +1,20 @@
+[
+    {
+        "name": "demo.sre",
+        "email": "demo.sre@autoptic.com",
+        "password": "{{.PasswordTemplate}}",
+        "role": "user"
+    },
+    {
+        "name": "demo.dev",
+        "email": "demo.dev@autoptic.com",
+        "password": "{{.PasswordTemplate}}",
+        "role": "user"
+    },
+    {
+        "name": "demo.manager",
+        "email": "demo.manager@autoptic.com",
+        "password": "{{.PasswordTemplate}}",
+        "role": "user"
+    }
+]

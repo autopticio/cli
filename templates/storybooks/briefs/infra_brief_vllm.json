@@ -1,0 +1,39 @@
+{
+  "config": {
+    "slack": {
+      "endpoint": "https://slack.com/api/chat.postMessage",
+      "token": "xoxb-your-slack-api-token"
+    },
+    "llm": {
+      "temperature": 0.10,
+      "max_tokens": 350,
+      "endpoint": "model-server-url",
+      "model": "your-model-id",
+      "token": "EMPTY"
+    }
+  },
+  "task": [
+    {
+      "name": "daily_ec2_news",
+      "type": "schedule",
+      "vars": {
+        "pql": "aws-ec2-utilization",
+        "env": "production",
+        "cron": "0 7 * * *",
+      	"channel": "your-slack-channel-id-to-post-to",
+      	"prompt": "Review the provided log and metric data to identify essential patterns, trends, and anomalies. Focus on uncovering potential root causes for system alerts, performance degradation, or unusual behaviors. Highlight key insights related to resource usage (e.g., CPU, memory, disk I/O), response times, error codes, and application-specific metrics. Summarize any recurring errors, bottlenecks, or latency spikes, and suggest possible areas for optimization or further investigation. Ensure clarity by organizing insights based on their impact and frequency.Use US central time to report findings:"
+      }
+    },
+    {
+      "name": "daily_s3_news",
+      "type": "schedule",
+      "vars": {
+        "pql": "aws-s3-utilization",
+        "env": "production",
+        "cron": "0 7 * * *",
+      	"channel": "your-slack-channel-id-to-post-to",
+      	"prompt": "Review the provided log and metric data to identify essential patterns, trends, and anomalies. Focus on uncovering potential root causes for system alerts, performance degradation, or unusual behaviors. Highlight key insights related to resource usage (e.g., CPU, memory, disk I/O), response times, error codes, and application-specific metrics. Summarize any recurring errors, bottlenecks, or latency spikes, and suggest possible areas for optimization or further investigation. Ensure clarity by organizing insights based on their impact and frequency.Use US central time to report findings:"
+      }
+    }
+  ]
+}

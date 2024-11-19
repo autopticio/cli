@@ -1,0 +1,52 @@
+[
+    {
+        "command": "/rds-instance-health",
+        "title": "RDS Instance Health",
+        "content": "Create a PQL program that monitors the health of all RDS instances across regions, focusing on CPU and memory usage over the past 7 days."
+    },
+    {
+        "command": "/elb-traffic-analysis",
+        "title": "ELB Traffic Analysis",
+        "content": "Create a PQL program to analyze traffic patterns and peak hours for Elastic Load Balancers across all regions for the past 15 days."
+    },
+    {
+        "command": "/lambda-invocation-count",
+        "title": "Lambda Invocation Count",
+        "content": "Create a PQL program that tracks the invocation count and errors for Lambda functions across all regions for the last 7 days."
+    },
+    {
+        "command": "/dynamodb-capacity-usage",
+        "title": "DynamoDB Capacity Usage",
+        "content": "Create a PQL program to analyze provisioned vs. consumed read/write capacity for DynamoDB tables across all regions over the past 30 days."
+    },
+    {
+        "command": "/ec2-cost-analysis",
+        "title": "EC2 Cost Analysis",
+        "content": "Create a PQL program to calculate and summarize EC2 cost across all instance types and regions over the past 60 days."
+    },
+    {
+        "command": "/vpc-traffic-monitoring",
+        "title": "VPC Traffic Monitoring",
+        "content": "Create a PQL program to monitor inbound and outbound traffic for all VPCs, identifying high-traffic patterns over the past month."
+    },
+    {
+        "command": "/s3-access-logs",
+        "title": "S3 Access Logs",
+        "content": "Create a PQL program to analyze S3 access logs and identify frequent access patterns and potential security issues over the past 30 days."
+    },
+    {
+        "command": "/cloudfront-usage-report",
+        "title": "CloudFront Usage Report",
+        "content": "Create a PQL program that generates usage and cost reports for CloudFront distributions over the last 15 days, including request and data transfer stats."
+    },
+    {
+        "command": "/ecs-cluster-performance",
+        "title": "ECS Cluster Performance",
+        "content": "Create a PQL program to track ECS cluster performance metrics, including CPU and memory utilization for each service and task over the past week."
+    },
+    {
+        "command": "/elasticache-memory-analysis",
+        "title": "ElastiCache Memory Analysis",
+        "content": "Create a PQL program to analyze memory usage and hit/miss rates for ElastiCache clusters across all regions for the last 30 days."
+    }
+]

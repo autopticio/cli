@@ -1,0 +1,39 @@
+{
+    "suggestions": [
+        {
+            "title": [
+                "Top 5 S3 Buckets by Size and Object Count",
+                "This report tracks the top 5 S3 buckets by storage size and object count over the last three days in selected AWS regions (US and EU). It visualizes storage size and object count trends, highlighting key buckets to help monitor usage patterns."
+            ],
+            "content": "Create a PQL program to identify the top 5 S3 buckets by size and object count across US and EU regions over the past three days. Show the latest bucket sizes and object counts in pie charts, and plot line charts for daily trends. Include a summary note with key insights."
+        },
+        {
+            "title": [
+                "AWS EC2 CPU Utilization Analysis Across Regions",
+                "This analysis monitors CPU utilization for EC2 instances across multiple AWS accounts in the US and EU regions over the last 6 hours. It aggregates CPU usage data, highlights the most and least utilized instances, and identifies high and low CPU utilization periods. A volatility index is also calculated to measure CPU usage variability during this time."
+            ],
+            "content": "Analyze CPU utilization for EC2 instances across AWS accounts in the US and EU regions for the past 6 hours with 15-minute intervals. Aggregate CPU data, and display overall trends in a line chart. Show the top 3 most and least utilized instances in pie charts. Identify periods with high and low CPU usage and compute a volatility index, displaying results in bar charts."
+        },
+        {
+            "title": [
+                "RDS Performance Monitoring Across AWS Regions",
+                "This analysis monitors key performance metrics for Amazon RDS instances in US and EU regions over the past 6 hours with 15-minute intervals. Metrics include CPU usage, memory availability, IOPS, disk queue depth, database connection count, and latency. The report provides insights into performance bottlenecks, highlights potential issues, and suggests areas for cost optimization."
+            ],
+            "content": "Analyze RDS performance metrics across AWS regions (US and EU) over the last 6 hours at 15-minute intervals. Track database connection counts, operation latency, IOPS (read and write), disk queue depth, CPU utilization, CPU credit balance and usage, and available memory. Visualize connection and latency trends in bar charts to monitor spikes and monotonic increases. Display IOPS, CPU, and memory trends in line charts, with insights on thresholds for scaling or performance degradation. Summarize observations and provide key performance notes to guide optimization and alert monitoring."
+        },
+        {
+            "title": [
+                "Top 10 DynamoDB Table Metrics Analysis Across AWS Regions",
+                "This analysis reviews key performance metrics for DynamoDB tables across US and EU AWS regions over a 6-hour period with 15-minute aggregation. The metrics include latency, read and write capacity, item counts, and account-level metrics. By identifying the top 10 tables in each metric category, this report provides insights into the most resource-intensive tables and their usage patterns over time."
+            ],
+            "content": "Analyze DynamoDB table metrics across US and EU regions over the last 6 hours with 15-minute intervals. Track read and write capacity, latency, item counts, and account-level metrics. Identify the top 10 tables in each metric category and visualize trends in bar charts. Highlight tables with the highest and lowest values for each metric, and provide insights on usage patterns and potential optimization opportunities."
+        },
+        {
+            "title": [
+                "AWS Lambda Performance and Utilization Analysis",
+                "This analysis tracks AWS Lambda performance metrics across the US and EU regions over a 6-hour period with 15-minute intervals. Key metrics include concurrent executions, function duration, error counts, throttling, and invocation frequency. The report identifies the top 10 Lambda functions by average invocation, error, duration, and throttle metrics to highlight potential optimization areas."
+            ],
+            "content": "Create a PQL program to analyze AWS Lambda metrics across regions (US and EU) over the last 6 hours with 15-minute intervals. Track claimed and unreserved concurrency, function duration, errors, throttles, and invocation counts. Identify the top 10 Lambda functions by errors, duration, throttling, and invocations, displaying each in pie charts. Use bar stack charts to show concurrency trends and invocation counts, and line charts for throttles and concurrent executions. Summarize insights on Lambda function performance and highlight areas for potential tuning or scaling."
+        }
+    ]
+}
