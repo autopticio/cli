@@ -14,10 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
-	"github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
+	costTypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	elbTypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
@@ -252,15 +254,15 @@ func getTopServicesByCost(cfg aws.Config) ([]string, error) {
 	startTime := endTime.AddDate(0, -1, 0) // Last month
 
 	input := &costexplorer.GetCostAndUsageInput{
-		TimePeriod: &types.DateInterval{
+		TimePeriod: &costTypes.DateInterval{
 			Start: aws.String(startTime.Format("2006-01-02")),
 			End:   aws.String(endTime.Format("2006-01-02")),
 		},
 		Granularity: "MONTHLY",
 		Metrics:     []string{"UnblendedCost"},
-		GroupBy: []types.GroupDefinition{
+		GroupBy: []costTypes.GroupDefinition{
 			{
-				Type: types.GroupDefinitionTypeDimension,
+				Type: costTypes.GroupDefinitionTypeDimension,
 				Key:  aws.String("SERVICE"),
 			},
 		},
@@ -389,10 +391,10 @@ func listCloudWatchMetrics(cfg aws.Config) ([]ResourceMetadata, error) {
 	return resources, nil
 }
 
-// ListELBs retrieves a list of Elastic Load Balancers (ELBs) and their metadata
 func listELBs(cfg aws.Config) ([]ResourceMetadata, error) {
 	svc := elasticloadbalancingv2.NewFromConfig(cfg)
 	input := &elasticloadbalancingv2.DescribeLoadBalancersInput{}
+
 	result, err := svc.DescribeLoadBalancers(context.TODO(), input)
 	if err != nil {
 		return nil, err
@@ -408,6 +410,18 @@ func listELBs(cfg aws.Config) ([]ResourceMetadata, error) {
 			"availability_zones": elb.AvailabilityZones,
 		}
 
+		// Fetch additional details
+		metadata["attributes"] = getLoadBalancerAttributes(svc, *elb.LoadBalancerArn)
+		metadata["listeners"] = getListeners(svc, *elb.LoadBalancerArn)
+		targetGroups := getTargetGroups(svc, *elb.LoadBalancerArn)
+		metadata["target_groups"] = targetGroups
+		metadata["tags"] = getEc2Tags(svc, *elb.LoadBalancerArn)
+
+		// Fetch instances in target groups
+		for _, tg := range targetGroups {
+			metadata["instances_"+*tg.TargetGroupArn] = getTargetGroupInstances(svc, *tg.TargetGroupArn)
+		}
+
 		resources = append(resources, ResourceMetadata{
 			ResourceID: *elb.LoadBalancerArn,
 			MetaData:   metadata,
@@ -415,6 +429,61 @@ func listELBs(cfg aws.Config) ([]ResourceMetadata, error) {
 	}
 
 	return resources, nil
+}
+
+func getLoadBalancerAttributes(svc *elasticloadbalancingv2.Client, lbArn string) []elbTypes.LoadBalancerAttribute {
+	input := &elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{
+		LoadBalancerArn: aws.String(lbArn),
+	}
+	result, err := svc.DescribeLoadBalancerAttributes(context.TODO(), input)
+	if err != nil {
+		return nil
+	}
+	return result.Attributes
+}
+
+func getListeners(svc *elasticloadbalancingv2.Client, lbArn string) []elbTypes.Listener {
+	input := &elasticloadbalancingv2.DescribeListenersInput{
+		LoadBalancerArn: aws.String(lbArn),
+	}
+	result, err := svc.DescribeListeners(context.TODO(), input)
+	if err != nil {
+		return nil
+	}
+	return result.Listeners
+}
+
+func getTargetGroups(svc *elasticloadbalancingv2.Client, lbArn string) []elbTypes.TargetGroup {
+	input := &elasticloadbalancingv2.DescribeTargetGroupsInput{
+		LoadBalancerArn: aws.String(lbArn),
+	}
+	result, err := svc.DescribeTargetGroups(context.TODO(), input)
+	if err != nil {
+		return nil
+	}
+	return result.TargetGroups
+}
+
+func getTargetGroupInstances(svc *elasticloadbalancingv2.Client, tgArn string) []elbTypes.TargetHealthDescription {
+	input := &elasticloadbalancingv2.DescribeTargetHealthInput{
+		TargetGroupArn: aws.String(tgArn),
+	}
+	result, err := svc.DescribeTargetHealth(context.TODO(), input)
+	if err != nil {
+		return nil
+	}
+	return result.TargetHealthDescriptions
+}
+
+func getEc2Tags(svc *elasticloadbalancingv2.Client, lbArn string) []elbTypes.TagDescription {
+	input := &elasticloadbalancingv2.DescribeTagsInput{
+		ResourceArns: []string{lbArn},
+	}
+	result, err := svc.DescribeTags(context.TODO(), input)
+	if err != nil {
+		return nil
+	}
+	return result.TagDescriptions
 }
 
 // ListVPCs retrieves a list of VPCs and their metadata
@@ -434,7 +503,7 @@ func listVPCs(cfg aws.Config) ([]ResourceMetadata, error) {
 			"is_default": vpc.IsDefault,
 		}
 
-		// Add DNS support and hostnames information, if available
+		// Add DHCP options ID if available
 		if vpc.DhcpOptionsId != nil {
 			metadata["dhcp_options_id"] = *vpc.DhcpOptionsId
 		}
@@ -448,6 +517,11 @@ func listVPCs(cfg aws.Config) ([]ResourceMetadata, error) {
 		}
 		metadata["tags"] = tags
 
+		// Fetch related resources
+		metadata["subnets"] = getSubnets(svc, *vpc.VpcId)
+		metadata["route_tables"] = getRouteTables(svc, *vpc.VpcId)
+		metadata["security_groups"] = getSecurityGroupsForVPC(svc, *vpc.VpcId)
+
 		resources = append(resources, ResourceMetadata{
 			ResourceID: *vpc.VpcId,
 			MetaData:   metadata,
@@ -455,6 +529,63 @@ func listVPCs(cfg aws.Config) ([]ResourceMetadata, error) {
 	}
 
 	return resources, nil
+}
+
+func getSubnets(svc *ec2.Client, vpcID string) []string {
+	input := &ec2.DescribeSubnetsInput{
+		Filters: []ec2Types.Filter{{
+			Name:   aws.String("vpc-id"),
+			Values: []string{vpcID},
+		}},
+	}
+	result, err := svc.DescribeSubnets(context.TODO(), input)
+	if err != nil {
+		return nil
+	}
+
+	var subnets []string
+	for _, subnet := range result.Subnets {
+		subnets = append(subnets, *subnet.SubnetId)
+	}
+	return subnets
+}
+
+func getRouteTables(svc *ec2.Client, vpcID string) []string {
+	input := &ec2.DescribeRouteTablesInput{
+		Filters: []ec2Types.Filter{{
+			Name:   aws.String("vpc-id"),
+			Values: []string{vpcID},
+		}},
+	}
+	result, err := svc.DescribeRouteTables(context.TODO(), input)
+	if err != nil {
+		return nil
+	}
+
+	var routeTables []string
+	for _, rt := range result.RouteTables {
+		routeTables = append(routeTables, *rt.RouteTableId)
+	}
+	return routeTables
+}
+
+func getSecurityGroupsForVPC(svc *ec2.Client, vpcID string) []string {
+	input := &ec2.DescribeSecurityGroupsInput{
+		Filters: []ec2Types.Filter{{
+			Name:   aws.String("vpc-id"),
+			Values: []string{vpcID},
+		}},
+	}
+	result, err := svc.DescribeSecurityGroups(context.TODO(), input)
+	if err != nil {
+		return nil
+	}
+
+	var securityGroups []string
+	for _, sg := range result.SecurityGroups {
+		securityGroups = append(securityGroups, *sg.GroupId)
+	}
+	return securityGroups
 }
 
 func listRoute53HostedZones(cfg aws.Config) ([]ResourceMetadata, error) {
@@ -531,17 +662,71 @@ func listEC2Instances(cfg aws.Config) ([]ResourceMetadata, error) {
 	var resources []ResourceMetadata
 	for _, reservation := range result.Reservations {
 		for _, instance := range reservation.Instances {
+			metadata := map[string]interface{}{
+				"instance_type":     instance.InstanceType,
+				"launch_time":       instance.LaunchTime,
+				"state":             instance.State.Name,
+				"availability_zone": instance.Placement.AvailabilityZone,
+				"subnet_id":         instance.SubnetId,
+				"vpc_id":            instance.VpcId,
+				"private_ip":        instance.PrivateIpAddress,
+				"public_ip":         instance.PublicIpAddress,
+				"security_groups":   getSecurityGroups(instance.SecurityGroups),
+				"tags":              getTags(instance.Tags),
+				"key_name":          instance.KeyName,
+				"volumes":           getVolumes(svc, instance.InstanceId),
+			}
+
 			resources = append(resources, ResourceMetadata{
 				ResourceID: *instance.InstanceId,
-				MetaData: map[string]interface{}{
-					"instance_type": instance.InstanceType,
-					"launch_time":   *instance.LaunchTime,
-				},
+				MetaData:   metadata,
 			})
 		}
 	}
 
 	return resources, nil
+}
+
+func getSecurityGroups(groups []ec2Types.GroupIdentifier) []string {
+	var sgNames []string
+	for _, sg := range groups {
+		sgNames = append(sgNames, *sg.GroupName)
+	}
+	return sgNames
+}
+
+func getTags(tags []ec2Types.Tag) map[string]string {
+	tagMap := make(map[string]string)
+	for _, tag := range tags {
+		tagMap[*tag.Key] = *tag.Value
+	}
+	return tagMap
+}
+
+func getVolumes(svc *ec2.Client, instanceID *string) []map[string]interface{} {
+	input := &ec2.DescribeVolumesInput{
+		Filters: []ec2Types.Filter{
+			{
+				Name:   aws.String("attachment.instance-id"),
+				Values: []string{*instanceID},
+			},
+		},
+	}
+	result, err := svc.DescribeVolumes(context.TODO(), input)
+	if err != nil {
+		return nil
+	}
+
+	var volumes []map[string]interface{}
+	for _, vol := range result.Volumes {
+		volumes = append(volumes, map[string]interface{}{
+			"volume_id":   *vol.VolumeId,
+			"size_gb":     vol.Size,
+			"volume_type": vol.VolumeType,
+			"iops":        vol.Iops,
+		})
+	}
+	return volumes
 }
 
 // ListEBSVolumes retrieves a list of EBS volumes and their metadata
